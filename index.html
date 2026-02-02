@@ -1,1 +1,1150 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cek Stok Paket - Professional Stock Checker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 30px 0;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .tab-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 24px;
+            background: white;
+            border-radius: 16px;
+            padding: 6px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .tab-button {
+            flex: 1;
+            max-width: 200px;
+            padding: 14px 24px;
+            border: none;
+            background: transparent;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #718096;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tab-button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .tab-button:hover:not(.active) {
+            background: #f7fafc;
+            color: #4a5568;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .refresh-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 20px;
+            display: block;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .refresh-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .refresh-button:active {
+            transform: translateY(0);
+        }
+
+        .refresh-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stock-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        @media (min-width: 641px) and (max-width: 1023px) {
+            .stock-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .stock-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 16px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .stock-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f7fafc;
+        }
+
+        .package-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2d3748;
+            flex: 1;
+            word-break: break-word;
+            line-height: 1.3;
+        }
+
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .status-success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+
+        .status-error {
+            background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+            color: white;
+        }
+
+        .status-loading {
+            background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+            color: white;
+        }
+
+        .card-content {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .info-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .info-value.success {
+            color: #48bb78;
+        }
+
+        .info-value.error {
+            color: #f56565;
+        }
+
+        .info-value.price {
+            color: #e53e3e;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .message-box {
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 8px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .message-box.success {
+            background: #f0fff4;
+            border-left: 4px solid #48bb78;
+        }
+
+        .message-box.error {
+            background: #fff5f5;
+            border-left: 4px solid #f56565;
+        }
+
+        .loading-spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .card.loading {
+            opacity: 0.7;
+        }
+
+        .card.loading .card-content {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px 0;
+            color: #a0aec0;
+            font-size: 12px;
+        }
+
+        .error-detail {
+            font-size: 11px;
+            color: #e53e3e;
+            margin-top: 8px;
+            word-break: break-word;
+            display: block;
+        }
+
+        .last-updated {
+            text-align: center;
+            padding: 10px;
+            color: #a0aec0;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+            margin: 8px 0;
+        }
+
+        .progress-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 16px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            height: 6px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-container.visible {
+            display: block;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .stats-text {
+            text-align: center;
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 16px;
+            min-height: 18px;
+        }
+
+        .retry-badge {
+            background: #ed8936;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            margin-left: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #a0aec0;
+            display: none;
+        }
+
+        .empty-state.active {
+            display: block;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+        }
+
+        .stock-description {
+            text-align: center;
+            font-size: 12px;
+            color: #000000;
+            font-weight: bold;
+            margin-top: 6px;
+            padding-top: 6px;
+            background: #f0fff4;
+            padding: 8px;
+            border-radius: 6px;
+            border-left: 3px solid #48bb78;
+        }
+
+        .order-button {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .order-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+        }
+
+        .order-button:active {
+            transform: translateY(0);
+        }
+
+        .order-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .whatsapp-icon {
+            font-size: 16px;
+        }
+
+        .price-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .price-currency {
+            color: #e53e3e;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📦 Cek Stok Paket xl</h1>
+            <p style="font-weight: 600; margin-top: 4px;">web stok otomatis </p>
+            <p style="margin-top: 4px; font-size: 13px;">jika stok ada nanti tombol order akan mucul otomatis...</p>
+            <p style="margin-top: 4px; font-size: 13px;">jika stok kosong nanti tombol order akan tdak mucul otomatis...</p>
+        </div>
+
+        <div class="tab-container">
+            <button class="tab-button active" id="tabCircle" onclick="switchTab('circle')">
+                ⭕ paket khusus xl
+            </button>
+        </div>
+
+        <button class="refresh-button" id="refreshButton" onclick="refreshCurrentTab()">
+            🔄 Refresh stok paket
+        </button>
+
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="stats-text" id="statsText"></div>
+
+        <!-- TAB CIRCLE - REAL-TIME -->
+        <div class="tab-content active" id="contentCircle">
+            <div class="stock-grid" id="stockCircle"></div>
+            <div class="empty-state" id="emptyCircle">
+                <div class="empty-state-icon">⭕</div>
+                <div class="empty-state-text">Tidak ada paket CIRCLE tersedia</div>
+            </div>
+        </div>
+
+        <div class="last-updated" id="lastUpdated"></div>
+
+        <div class="footer">
+            <p>© 2025 Stock CIRCLE - Order via WhatsApp</p>
+        </div>
+    </div>
+
+    <script>
+        // HARGA PAKET CIRCLE
+        const PACKAGE_PRICES = {
+            'CIRCLE5TO9GBPROMO': 'Rp 20.000',
+            'CIRCLE10TO14GBPROMO': 'Rp 25.000',
+            'CIRCLE15TO19GBPROMO': 'Rp 30.000',
+            'CIRCLE20TO24GBPROMO': 'Rp 35.000',
+            'CIRCLE25TO29GBPROMO': 'Rp 40.000',
+            'CIRCLE30TO34GBPROMO': 'Rp 47.000',
+            'CIRCLE35TO39GBPROMO': 'Rp 50.000',
+            'CIRCLE40TO44GBPROMO': 'Rp 55.000',
+            'CIRCLE45TO49GBPROMO': 'Rp 60.000',
+            'CIRCLE50TO54GBPROMO': 'Rp 65.000',
+            'CIRCLE80TO84GBPROMO': 'Rp 95.000'
+        };
+
+        const API_CONFIG = {
+            baseUrl: 'https://golang-openapi-checkpackagestock-xltembakservice.kmsp-store.com/v1',
+            apiKey: '1f4c0f3d-b0c2-4414-8573-6b844e4cdb55',
+            requestTimeout: 20000,
+            maxRetries: 3,
+            retryDelay: 1000,
+            packages: [
+                { id: 'CIRCLE5TO9GBPROMO', name: 'Circle 5-9 GB Promo' },
+                { id: 'CIRCLE10TO14GBPROMO', name: 'Circle 10-14 GB Promo' },
+                { id: 'CIRCLE15TO19GBPROMO', name: 'Circle 15-19 GB Promo' },
+                { id: 'CIRCLE20TO24GBPROMO', name: 'Circle 20-24 GB Promo' },
+                { id: 'CIRCLE25TO29GBPROMO', name: 'Circle 25-29 GB Promo' },
+                { id: 'CIRCLE30TO34GBPROMO', name: 'Circle 30-34 GB Promo' },
+                { id: 'CIRCLE35TO39GBPROMO', name: 'Circle 35-39 GB Promo' },
+                { id: 'CIRCLE40TO44GBPROMO', name: 'Circle 40-44 GB Promo' },
+                { id: 'CIRCLE45TO49GBPROMO', name: 'Circle 45-49 GB Promo' },
+                { id: 'CIRCLE50TO54GBPROMO', name: 'Circle 50-54 GB Promo' },
+                { id: 'CIRCLE80TO84GBPROMO', name: 'Circle 80-84 GB Promo' }
+            ]
+        };
+
+        const PACKAGE_NAMES = {
+            'CIRCLE5TO9GBPROMO': 'khusus xl 5-9 GB',
+            'CIRCLE10TO14GBPROMO': 'khusus xl 10-14 GB',
+            'CIRCLE15TO19GBPROMO': 'khusus xl 15-19 GB',
+            'CIRCLE20TO24GBPROMO': 'khusus xl 20-24 GB',
+            'CIRCLE25TO29GBPROMO': 'khusus xl 25-29 GB',
+            'CIRCLE30TO34GBPROMO': 'khusus xl 30-34 GB',
+            'CIRCLE35TO39GBPROMO': 'khusus xl 35-39 GB',
+            'CIRCLE40TO44GBPROMO': 'khusus xl 40-44 GB',
+            'CIRCLE45TO49GBPROMO': 'khusus xl 45-49 GB',
+            'CIRCLE50TO54GBPROMO': 'khusus xl 50-54 GB',
+            'CIRCLE80TO84GBPROMO': 'khusus xl 80-84 GB'
+        };
+
+        const PACKAGE_DESCRIPTIONS = {
+            'CIRCLE5TO9GBPROMO': 'paket reguler 24 jam<br>resmi legal',
+            'CIRCLE10TO14GBPROMO': 'paket reguler 24 jam<br>resmi legal',
+            'CIRCLE15TO19GBPROMO': 'paket reguler 24 jam<br>resmi legal',
+            'CIRCLE20TO24GBPROMO': 'paket reguler 24 jam<br>resmi legal',
+            'CIRCLE25TO29GBPROMO': 'paket reguler 24 jam<br>resmi legal',
+            'CIRCLE30TO34GBPROMO': 'paket reguler 24 jam<br>resmi legal',
+            'CIRCLE35TO39GBPROMO': 'paket reguler 24 jam<br>resmi legal',
+            'CIRCLE40TO44GBPROMO': 'paket reguler 24 jam<br>resmi legal',
+            'CIRCLE45TO49GBPROMO': 'paket reguler 24 jam<br>resmi legal',
+            'CIRCLE50TO54GBPROMO': 'paket reguler 24 jam<br>resmi legal',
+            'CIRCLE80TO84GBPROMO': 'paket reguler 24 jam<br>resmi legal'
+        };
+
+        // NOMOR WHATSAPP UNTUK ORDER
+        const WHATSAPP_NUMBER = '6282117883554'; // Ganti dengan nomor WhatsApp kamu
+
+        let isLoading = false;
+        let abortController = null;
+        let currentTab = 'circle';
+        let completedCount = 0;
+        let successCount = 0;
+        let errorCount = 0;
+        const domCache = new Map();
+
+        function getPackagesByType(type) {
+            return API_CONFIG.packages.filter(pkg => pkg.id.startsWith('CIRCLE'));
+        }
+
+        function getContainerId(packageId) {
+            return 'stockCircle';
+        }
+
+        function switchTab(tab) {
+            currentTab = 'circle';
+            
+            const refreshButton = document.getElementById('refreshButton');
+            if (refreshButton) {
+                refreshButton.disabled = false;
+                refreshButton.innerHTML = '🔄 Refresh stok paket';
+            }
+
+            const progressContainer = document.getElementById('progressContainer');
+            const statsText = document.getElementById('statsText');
+            if (progressContainer) {
+                progressContainer.classList.remove('visible');
+            }
+            if (statsText) {
+                statsText.textContent = '';
+            }
+
+            document.getElementById('tabCircle').classList.add('active');
+            document.getElementById('contentCircle').classList.add('active');
+            
+            checkStockForTab('circle');
+        }
+
+        function refreshCurrentTab() {
+            checkStockForTab('circle');
+        }
+
+        function getCardElement(packageId) {
+            if (domCache.has(packageId)) {
+                return domCache.get(packageId);
+            }
+
+            const card = document.getElementById('card-' + packageId);
+            if (card) {
+                domCache.set(packageId, card);
+                return card;
+            }
+
+            const containerId = getContainerId(packageId);
+            const container = document.getElementById(containerId);
+            if (!container) return null;
+
+            const newCard = document.createElement('div');
+            newCard.className = 'card loading';
+            newCard.id = 'card-' + packageId;
+
+            const packageName = PACKAGE_NAMES[packageId] || packageId;
+
+            newCard.innerHTML =
+                '<div class="card-header">' +
+                    '<span class="package-name">' + packageName + '</span>' +
+                    '<span class="status-badge status-loading" data-status="' + packageId + '-status">' +
+                        '<span class="loading-spinner"></span>' +
+                        'LOADING' +
+                    '</span>' +
+                '</div>' +
+                '<div class="card-content" data-content="' + packageId + '-content">' +
+                    '<div class="message-box" data-message="' + packageId + '-message">' +
+                        'Memuat data dari server...' +
+                    '</div>' +
+                '</div>';
+
+            container.appendChild(newCard);
+            domCache.set(packageId, newCard);
+
+            return newCard;
+        }
+
+        function updateCardStatus(packageId, status, message, retryCount) {
+            const card = getCardElement(packageId);
+            if (!card) return;
+
+            const statusBadge = card.querySelector('[data-status="' + packageId + '-status"]');
+            const messageBox = card.querySelector('[data-message="' + packageId + '-message"]');
+
+            if (status === 'success') {
+                card.classList.remove('loading');
+                if (statusBadge) {
+                    statusBadge.className = 'status-badge status-success';
+                    statusBadge.innerHTML = 'STOK ADA';
+                }
+                if (messageBox) {
+                    messageBox.style.display = 'none';
+                }
+            } else if (status === 'error') {
+                card.classList.remove('loading');
+                if (statusBadge) {
+                    statusBadge.className = 'status-badge status-error';
+                    statusBadge.innerHTML = 'STOK HABIS';
+                }
+                if (messageBox) {
+                    let retryInfo = retryCount > 0 ? '<span class="retry-badge">' + retryCount + '</span>' : '';
+                    messageBox.className = 'message-box error';
+                    messageBox.style.display = 'block';
+                    messageBox.innerHTML = '<strong>Gagal cek stok' + retryInfo + '</strong><div class="error-detail">' + (message || '') + '</div>';
+                }
+            } else if (status === 'loading') {
+                card.classList.add('loading');
+                if (statusBadge) {
+                    let retryInfo = retryCount > 0 ? '<span class="retry-badge">' + retryCount + '</span>' : '';
+                    statusBadge.className = 'status-badge status-loading';
+                    statusBadge.innerHTML = '<span class="loading-spinner"></span>' + retryInfo;
+                }
+                if (messageBox) {
+                    messageBox.className = 'message-box';
+                    messageBox.style.display = 'block';
+                    messageBox.textContent = message || 'Memuat data dari server...';
+                }
+            }
+        }
+
+        function createWhatsAppLink(packageId, stockValue) {
+            const packageName = PACKAGE_NAMES[packageId] || packageId;
+            const price = PACKAGE_PRICES[packageId] || 'Harga tidak tersedia';
+            
+            // Format pesan untuk WhatsApp
+            const message = `mb evi, saya mau order:\n` +
+                           `📦 Paket: ${packageName}\n` +
+                           `💰 Harga: ${price}\n` +
+                           `📊 Stok: ${stockValue} unit\n` +
+                           `\n` +
+                           `Saya ingin pesan paket ini.`;
+            
+            // Encode message untuk URL
+            const encodedMessage = encodeURIComponent(message);
+            
+            // Return link WhatsApp
+            return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
+        }
+
+        function updateCardStockData(packageId, data) {
+            const card = getCardElement(packageId);
+            if (!card) return;
+
+            let cardContent = card.querySelector('[data-content="' + packageId + '-content"]');
+
+            const existingDivider = cardContent.querySelector('.divider');
+            const existingInfoRows = cardContent.querySelectorAll('.info-row');
+            const existingButton = cardContent.querySelector('.order-button');
+
+            if (existingDivider) existingDivider.remove();
+            existingInfoRows.forEach(row => row.remove());
+            if (existingButton) existingButton.remove();
+
+            const divider = document.createElement('div');
+            divider.className = 'divider';
+            cardContent.appendChild(divider);
+
+            // Deskripsi paket
+            const descriptionText = PACKAGE_DESCRIPTIONS[packageId] || 'Deskripsi paket<br>tidak tersedia';
+            const descriptionRow = document.createElement('div');
+            descriptionRow.className = 'stock-description';
+            descriptionRow.innerHTML = descriptionText;
+            cardContent.appendChild(descriptionRow);
+
+            // Informasi stok
+            const stockValue = data.real_stock_from_suppliers !== undefined ? data.real_stock_from_suppliers :
+                               data.stock !== undefined ? data.stock :
+                               data.total_stock !== undefined ? data.total_stock :
+                               data.qty !== undefined ? data.qty :
+                               data.quantity !== undefined ? data.quantity : 0;
+
+            const stockRow = document.createElement('div');
+            stockRow.className = 'info-row';
+            stockRow.innerHTML =
+                '<span class="info-label">Total Stok</span>' +
+                '<span class="info-value success">' + formatNumber(stockValue) + ' unit</span>';
+            cardContent.appendChild(stockRow);
+
+            // Informasi harga
+            const priceRow = document.createElement('div');
+            priceRow.className = 'info-row';
+            const price = PACKAGE_PRICES[packageId] || 'Harga tidak tersedia';
+            priceRow.innerHTML =
+                '<span class="info-label">Harga</span>' +
+                '<span class="info-value price">' + price + '</span>';
+            cardContent.appendChild(priceRow);
+
+            // Tombol ORDER hanya jika stok > 0
+            if (stockValue > 0) {
+                const orderButton = document.createElement('a');
+                orderButton.className = 'order-button';
+                orderButton.href = createWhatsAppLink(packageId, stockValue);
+                orderButton.target = '_blank';
+                orderButton.innerHTML = '📱 ORDER via WhatsApp';
+                cardContent.appendChild(orderButton);
+            } else {
+                const outOfStockRow = document.createElement('div');
+                outOfStockRow.className = 'info-row';
+                outOfStockRow.innerHTML =
+                    '<span class="info-label">Status</span>' +
+                    '<span class="info-value error">Stok Habis</span>';
+                cardContent.appendChild(outOfStockRow);
+            }
+        }
+
+        function updateCardErrorDetails(packageId, statusCode, code, apiMessage) {
+            const card = getCardElement(packageId);
+            if (!card) return;
+
+            let cardContent = card.querySelector('[data-content="' + packageId + '-content"]');
+
+            const existingDivider = cardContent.querySelector('.divider');
+            const existingInfoRows = cardContent.querySelectorAll('.info-row');
+            const existingButton = cardContent.querySelector('.order-button');
+
+            if (existingDivider) existingDivider.remove();
+            existingInfoRows.forEach(row => row.remove());
+            if (existingButton) existingButton.remove();
+
+            const divider = document.createElement('div');
+            divider.className = 'divider';
+            cardContent.appendChild(divider);
+
+            // Tambahkan harga meski error
+            const priceRow = document.createElement('div');
+            priceRow.className = 'info-row';
+            const price = PACKAGE_PRICES[packageId] || 'Harga tidak tersedia';
+            priceRow.innerHTML =
+                '<span class="info-label">Harga</span>' +
+                '<span class="info-value price">' + price + '</span>';
+            cardContent.appendChild(priceRow);
+
+            const statusCodeRow = document.createElement('div');
+            statusCodeRow.className = 'info-row';
+            statusCodeRow.innerHTML =
+                '<span class="info-label">Status</span>' +
+                '<span class="info-value error">' + (statusCode || 'ERROR') + '</span>';
+            cardContent.appendChild(statusCodeRow);
+        }
+
+        function updateProgress(completed, total) {
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const statsText = document.getElementById('statsText');
+
+            const percentage = (completed / total) * 100;
+            progressBar.style.width = percentage + '%';
+
+            statsText.textContent = 'Memuat: ' + completed + '/' + total + ' paket (' + successCount + ' berhasil, ' + errorCount + ' gagal)';
+
+            if (completed === total) {
+                setTimeout(() => {
+                    progressContainer.classList.remove('visible');
+                    statsText.textContent = 'Selesai: ' + successCount + ' berhasil, ' + errorCount + ' gagal';
+                    setTimeout(() => {
+                        statsText.textContent = '';
+                    }, 3000);
+                }, 500);
+            }
+        }
+
+        function formatNumber(num) {
+            if (num === null || num === undefined) return '0';
+            return num.toLocaleString('id-ID');
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function tryFetch(url, options, packageId, attempt) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.requestTimeout);
+
+            if (options.signal) {
+                options.signal.addEventListener('abort', () => {
+                    clearTimeout(timeoutId);
+                    controller.abort();
+                });
+            }
+
+            const requestOptions = {
+                ...options,
+                signal: controller.signal
+            };
+
+            try {
+                const response = await fetch(url, requestOptions);
+                clearTimeout(timeoutId);
+
+                const responseText = await response.text();
+
+                let data;
+                try {
+                    data = responseText.trim() ? JSON.parse(responseText) : null;
+                } catch (e) {
+                    throw new Error('Gagal memparse response JSON');
+                }
+
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+                }
+
+                return { success: true, data, response };
+
+            } catch (error) {
+                clearTimeout(timeoutId);
+
+                if (error.name === 'AbortError') {
+                    throw new Error('Request timeout - server tidak merespon');
+                }
+
+                throw error;
+            }
+        }
+
+        async function fetchStockDataWithRetry(packageId, signal) {
+            const urlVariants = [
+                { url: API_CONFIG.baseUrl + '?api_key=' + API_CONFIG.apiKey + '&package_id=' + packageId, method: 'GET' },
+                { url: API_CONFIG.baseUrl + '/check?api_key=' + API_CONFIG.apiKey + '&package_id=' + packageId, method: 'GET' },
+                { url: API_CONFIG.baseUrl + '/stock?api_key=' + API_CONFIG.apiKey + '&package_id=' + packageId, method: 'GET' },
+                { url: API_CONFIG.baseUrl + '/' + packageId + '?api_key=' + API_CONFIG.apiKey, method: 'GET' },
+                { url: API_CONFIG.baseUrl, method: 'POST', body: { api_key: API_CONFIG.apiKey, package_id: packageId } },
+                { url: API_CONFIG.baseUrl + '/check', method: 'POST', body: { api_key: API_CONFIG.apiKey, package_id: packageId } }
+            ];
+
+            const lastError = new Error('Gagal menghubungi server setelah beberapa percobaan');
+
+            for (const variant of urlVariants) {
+                const options = {
+                    method: variant.method,
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-API-Key': API_CONFIG.apiKey,
+                        'Authorization': 'Bearer ' + API_CONFIG.apiKey
+                    },
+                    signal: signal
+                };
+
+                if (variant.method === 'POST' && variant.body) {
+                    options.body = JSON.stringify(variant.body);
+                }
+
+                for (let retry = 1; retry <= API_CONFIG.maxRetries; retry++) {
+                    try {
+                        const result = await tryFetch(variant.url, options, packageId, retry);
+
+                        if (result.success && result.data) {
+                            const data = result.data;
+
+                            if (data.status === true && data.data) {
+                                return {
+                                    success: true,
+                                    data: data.data,
+                                    message: data.message || 'SUCCESS'
+                                };
+                            }
+
+                            if (data.real_stock_from_suppliers !== undefined ||
+                                data.stock !== undefined ||
+                                data.total_stock !== undefined ||
+                                data.qty !== undefined ||
+                                data.quantity !== undefined) {
+                                return {
+                                    success: true,
+                                    data: data,
+                                    message: data.message || 'SUCCESS'
+                                };
+                            }
+
+                            if (data.status === false) {
+                                const errorMsg = data.message || data.detail || data.error || 'API returned error';
+                                throw new Error(errorMsg);
+                            }
+
+                            return {
+                                success: true,
+                                data: data,
+                                message: 'SUCCESS'
+                            };
+                        }
+
+                    } catch (error) {
+                        lastError.message = error.message;
+                        lastError.statusCode = error.statusCode;
+                        lastError.code = error.code;
+
+                        if (retry < API_CONFIG.maxRetries) {
+                            const delay = API_CONFIG.retryDelay * retry;
+                            await sleep(delay);
+                        }
+                    }
+                }
+            }
+
+            throw lastError;
+        }
+
+        async function checkStock(packageId, index, total, signal) {
+            try {
+                const card = getCardElement(packageId);
+                updateCardStatus(packageId, 'loading', 'Memuat data dari server...', 0);
+
+                const result = await fetchStockDataWithRetry(packageId, signal);
+
+                completedCount++;
+
+                if (result.success) {
+                    successCount++;
+                    updateCardStatus(packageId, 'success', result.message || 'SUCCESS');
+                    updateCardStockData(packageId, result.data);
+                } else {
+                    errorCount++;
+                    const errorMessage = result.error ? result.error.message : 'Terjadi kesalahan yang tidak diketahui';
+                    updateCardStatus(packageId, 'error', errorMessage, API_CONFIG.maxRetries);
+                    updateCardErrorDetails(
+                        packageId,
+                        result.statusCode,
+                        result.code
+                    );
+                }
+
+                updateProgress(completedCount, total);
+
+                return result;
+
+            } catch (error) {
+                completedCount++;
+                errorCount++;
+                const errorMessage = error ? error.message : 'Terjadi kesalahan yang tidak diketahui';
+                updateCardStatus(packageId, 'error', errorMessage, API_CONFIG.maxRetries);
+                updateCardErrorDetails(packageId, error ? error.statusCode : null, error ? error.code : 'REQUEST_FAILED');
+                updateProgress(completedCount, total);
+
+                return {
+                    success: false,
+                    error: error
+                };
+            }
+        }
+
+        async function checkStockForTab(tab) {
+            if (isLoading) return;
+
+            if (abortController) {
+                abortController.abort();
+            }
+
+            abortController = new AbortController();
+
+            const refreshButton = document.getElementById('refreshButton');
+            const progressContainer = document.getElementById('progressContainer');
+
+            isLoading = true;
+            refreshButton.disabled = true;
+            refreshButton.innerHTML = '<span class="loading-spinner"></span> Memuat...';
+
+            completedCount = 0;
+            successCount = 0;
+            errorCount = 0;
+
+            const packages = getPackagesByType(tab);
+            const containerId = 'stockCircle';
+            const emptyStateId = 'emptyCircle';
+
+            const container = document.getElementById(containerId);
+            const emptyState = document.getElementById(emptyStateId);
+
+            domCache.clear();
+
+            try {
+                container.innerHTML = '';
+
+                emptyState.classList.toggle('active', packages.length === 0);
+
+                if (packages.length === 0) {
+                    updateLastUpdated();
+                    return;
+                }
+
+                progressContainer.classList.add('visible');
+
+                const totalPackages = packages.length;
+
+                const fragment = document.createDocumentFragment();
+
+                for (const pkg of packages) {
+                    const card = document.createElement('div');
+                    card.className = 'card loading';
+                    card.id = 'card-' + pkg.id;
+
+                    const packageName = PACKAGE_NAMES[pkg.id] || pkg.id;
+                    const price = PACKAGE_PRICES[pkg.id] || 'Harga tidak tersedia';
+
+                    card.innerHTML =
+                        '<div class="card-header">' +
+                            '<span class="package-name">' + packageName + '</span>' +
+                            '<span class="status-badge status-loading" data-status="' + pkg.id + '-status">' +
+                                '<span class="loading-spinner"></span>' +
+                                'LOADING' +
+                            '</span>' +
+                        '</div>' +
+                        '<div class="card-content" data-content="' + pkg.id + '-content">' +
+                            '<div class="message-box" data-message="' + pkg.id + '-message">' +
+                                'Memuat data dari server...' +
+                            '</div>' +
+                        '</div>';
+
+                    fragment.appendChild(card);
+                    domCache.set(pkg.id, card);
+                }
+
+                container.appendChild(fragment);
+
+                const promises = packages.map((pkg, index) =>
+                    checkStock(pkg.id, index, totalPackages, abortController.signal)
+                );
+
+                await Promise.all(promises);
+
+                updateLastUpdated();
+
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    console.error('Error in checkStockForTab:', error);
+                }
+            } finally {
+                isLoading = false;
+                refreshButton.disabled = false;
+                refreshButton.innerHTML = '🔄 Refresh cek paket';
+                abortController = null;
+            }
+        }
+
+        function updateLastUpdated() {
+            const lastUpdatedElement = document.getElementById('lastUpdated');
+            const now = new Date();
+            const options = {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            lastUpdatedElement.textContent = 'Terakhir diperbarui: ' + now.toLocaleDateString('id-ID', options);
+        }
+
+        function init() {
+            try {
+                checkStockForTab('circle');
+
+                setInterval(() => {
+                    if (!isLoading) {
+                        checkStockForTab('circle');
+                    }
+                }, 180000);
+
+            } catch (error) {
+                console.error('Error initializing app:', error);
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>
